@@ -1,0 +1,205 @@
+📦 platform-cbt-react/
+│
+├── 📄 .env.example                    # Template environment variables
+├── 📄 .gitignore                      # Git ignore rules
+├── 📄 index.html                      # HTML entry point
+├── 📄 package.json                    # Dependencies & scripts
+├── 📄 tailwind.config.js              # Tailwind configuration
+├── 📄 vite.config.js                  # Vite configuration
+│
+├── 📚 DOCUMENTATION/
+│   ├── 📄 README.md                   # Project overview & setup guide
+│   ├── 📄 ARCHITECTURE.md             # Architecture & best practices (LENGKAP!)
+│   ├── 📄 BACKEND_COORDINATION.md     # Backend coordination checklist
+│   ├── 📄 INTEGRATION_GUIDE.md        # Step-by-step integration guide
+│   ├── 📄 QUICK_START.md              # Quick start guide
+│   ├── 📄 PROJECT_SUMMARY.md          # Project summary (this overview)
+│   └── 📄 FOLDER_STRUCTURE.txt        # This file
+│
+└── 📁 src/
+    │
+    ├── 📄 main.jsx                    # Entry point (ReactDOM.render)
+    ├── 📄 App.jsx                     # Main app with routing
+    ├── 📄 index.css                   # Global styles (Tailwind)
+    │
+    ├── 📁 api/                        # API Integration Layer
+    │   ├── 📄 apiClient.js           # ⭐ Axios instance + interceptors
+    │   ├── 📄 authApi.js             # Authentication endpoints
+    │   └── 📄 examApi.js             # Exam endpoints
+    │
+    ├── 📁 contexts/                   # State Management (Context API)
+    │   ├── 📄 AuthContext.jsx        # ⭐ Auth state (login, logout, user)
+    │   └── 📄 ExamContext.jsx        # ⭐ Exam state (questions, answers, timer, auto-save)
+    │
+    ├── 📁 components/                 # React Components
+    │   ├── 📄 LoginPage.jsx          # [TODO] Update dengan useAuth hook
+    │   ├── 📄 ExamPage.jsx           # [TODO] Update dengan useExam hook
+    │   ├── 📄 Timer.jsx              # [TODO] Update untuk terima timeRemaining prop
+    │   ├── 📄 QuestionGrid.jsx       # [TODO] Update untuk terima data dari useExam
+    │   ├── 📄 QuestionDisplay.jsx    # [TODO] Update untuk terima data dari useExam
+    │   ├── 📄 ProtectedRoute.jsx     # ✅ Route protection
+    │   ├── 📄 ErrorBoundary.jsx      # ✅ Error boundary
+    │   ├── 📄 ConfirmModal.jsx       # ✅ Confirmation modal
+    │   ├── 📄 LoadingSpinner.jsx     # ✅ Loading indicator
+    │   ├── 📄 NetworkStatus.jsx      # ✅ Network status indicator
+    │   └── 📄 ReviewPage.jsx         # ✅ Review page before submit
+    │
+    ├── 📁 hooks/                      # Custom React Hooks
+    │   ├── 📄 useAutoSave.js         # ✅ Debounced auto-save hook
+    │   ├── 📄 useNetworkStatus.js    # ✅ Network online/offline detection
+    │   └── 📄 useKeyboardNavigation.js # ✅ Keyboard shortcuts
+    │
+    ├── 📁 utils/                      # Utility Functions
+    │   └── 📄 storage.js             # ✅ localStorage/sessionStorage helpers
+    │
+    ├── 📁 constants/                  # Constants & Configuration
+    │   └── 📄 apiEndpoints.js        # ✅ API endpoints & base URL
+    │
+    └── 📁 data/                       # [OPTIONAL] Temporary data
+        └── 📄 questions.js           # Hardcoded questions (akan diganti API)
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 LEGEND:
+
+✅ = Sudah dibuat & production-ready
+⭐ = Core file yang sangat penting
+[TODO] = Perlu update/integrate dengan existing code
+📚 = Documentation
+📁 = Folder
+📄 = File
+
+═══════════════════════════════════════════════════════════════════════════
+
+🔥 CORE FILES (MUST UNDERSTAND):
+
+1. src/api/apiClient.js
+   → Axios instance dengan interceptors
+   → Automatic token attachment
+   → Centralized error handling
+   → Auto-logout on 401
+
+2. src/contexts/AuthContext.jsx
+   → Authentication state management
+   → login(), logout(), isAuthenticated
+   → User data management
+
+3. src/contexts/ExamContext.jsx
+   → Exam state management
+   → Questions, answers, timer
+   → Auto-save logic (debounced 3s)
+   → Navigation functions
+   → Submit exam logic
+
+4. src/utils/storage.js
+   → Token storage (sessionStorage)
+   → User data storage
+   → Exam state recovery (localStorage)
+
+5. src/constants/apiEndpoints.js
+   → API base URL
+   → All endpoint definitions
+   → HTTP status codes
+
+═══════════════════════════════════════════════════════════════════════════
+
+📊 DATA FLOW:
+
+User Action
+    ↓
+Component (LoginPage, ExamPage)
+    ↓
+Context (AuthContext, ExamContext)
+    ↓
+API Module (authApi, examApi)
+    ↓
+API Client (apiClient.js with interceptors)
+    ↓
+Backend API
+    ↓
+Response
+    ↓
+Update Context State
+    ↓
+Re-render Components
+
+═══════════════════════════════════════════════════════════════════════════
+
+🔄 AUTO-SAVE FLOW:
+
+User selects answer
+    ↓
+Update local state (instant UI feedback)
+    ↓
+Trigger auto-save (debounced 3 seconds)
+    ↓
+Batch pending changes
+    ↓
+POST to API (background)
+    ↓
+Success/Error handling
+    ↓
+Save to localStorage (recovery)
+
+═══════════════════════════════════════════════════════════════════════════
+
+🛡️ SECURITY LAYERS:
+
+1. Token Management
+   - sessionStorage (auto-clear on tab close)
+   - Authorization header (not URL)
+   - Auto-logout on expiry
+
+2. Route Protection
+   - ProtectedRoute component
+   - Check authentication before render
+   - Redirect to login if not authenticated
+
+3. Error Handling
+   - Centralized in apiClient.js
+   - User-friendly messages
+   - Automatic retry options
+
+4. Network Detection
+   - Online/offline indicator
+   - Disable actions when offline
+   - Auto-retry when back online
+
+═══════════════════════════════════════════════════════════════════════════
+
+📝 NEXT STEPS:
+
+1. Update existing components (see INTEGRATION_GUIDE.md):
+   - LoginPage.jsx → use useAuth()
+   - ExamPage.jsx → use useExam()
+   - Timer.jsx → accept timeRemaining prop
+   - QuestionGrid.jsx → accept data from useExam
+   - QuestionDisplay.jsx → accept data from useExam
+
+2. Configure environment:
+   - Copy .env.example to .env
+   - Update VITE_API_BASE_URL
+
+3. Test with backend:
+   - Coordinate API format (BACKEND_COORDINATION.md)
+   - Test all endpoints
+   - Fix any integration issues
+
+4. Polish & deploy:
+   - Test on multiple browsers
+   - Test on mobile devices
+   - Performance optimization
+   - Deploy to production
+
+═══════════════════════════════════════════════════════════════════════════
+
+💡 TIPS:
+
+- Read ARCHITECTURE.md untuk deep understanding
+- Follow INTEGRATION_GUIDE.md step-by-step
+- Use BACKEND_COORDINATION.md untuk koordinasi dengan backend
+- Check QUICK_START.md untuk quick setup
+- Refer to PROJECT_SUMMARY.md untuk overview
+
+═══════════════════════════════════════════════════════════════════════════
