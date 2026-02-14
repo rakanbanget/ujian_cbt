@@ -51,17 +51,17 @@ export default function QuestionDisplay({
       {/* Options */}
       <div className="space-y-3">
         {options.map((option) => {
-          const isSelected = selectedAnswer === option;
-          const optionText = question.options?.[option] || `Opsi ${option}`;
+          const optionText = question.options?.[option];
+          if (!optionText) return null; // Skip if no option text
 
+          const isSelected = selectedAnswer === option;
           return (
             <label
               key={option}
-              className={`flex items-start p-5 border-2 rounded-lg cursor-pointer transition-all ${
-                isSelected
+              className={`flex items-start p-5 border-2 rounded-lg cursor-pointer transition-all ${isSelected
                   ? 'border-blue-600 bg-blue-50 shadow-md'
                   : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <input
                 type="radio"
@@ -73,16 +73,14 @@ export default function QuestionDisplay({
               />
               <div className="flex-1">
                 <span
-                  className={`font-bold mr-3 ${
-                    isSelected ? 'text-blue-600' : 'text-gray-900'
-                  }`}
+                  className={`font-bold mr-3 ${isSelected ? 'text-blue-600' : 'text-gray-900'
+                    }`}
                 >
                   {option}.
                 </span>
                 <span
-                  className={`${
-                    isSelected ? 'text-gray-900 font-medium' : 'text-gray-800'
-                  }`}
+                  className={`${isSelected ? 'text-gray-900 font-medium' : 'text-gray-800'
+                    }`}
                 >
                   {optionText}
                 </span>
