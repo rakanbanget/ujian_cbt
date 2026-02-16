@@ -4,12 +4,12 @@ import { tokenStorage, clearAllStorage } from '../utils/storage';
 
 // Create axios instance
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  // Ensure baseURL ends with / for correct joining with relative paths
+  baseURL: API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`,
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Referer': 'https://mflss.sgp.dom.my.id'
   },
 });
 

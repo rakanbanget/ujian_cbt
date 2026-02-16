@@ -1,23 +1,23 @@
-// API Base URL - Menggunakan /api agar melewati Proxy Vite (Bypass CORS)
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// API Base URL - Gunakan /api agar melewati Proxy Vite (Bypass CORS)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Auth Endpoints
 export const AUTH_ENDPOINTS = {
-  LOGIN: '/login',
-  LOGOUT: '/logout',
-  USER: '/user',
+  LOGIN: 'login',
+  LOGOUT: 'logout',
+  USER: 'user',
 };
 
 // Exam Endpoints
 export const EXAM_ENDPOINTS = {
-  LIST_UJIANS: '/ujians',
-  GET_SOAL: '/soal',
-  SUBMIT_JAWABAN: '/soal/submit',
+  LIST_UJIANS: 'ujians',
+  GET_SOAL: 'soal',
+  SUBMIT_JAWABAN: 'soal/submit',
 };
 
 // Pengumuman Endpoints
 export const PENGUMUMAN_ENDPOINTS = {
-  CEK_PENGUMUMAN: '/cek-pengumuman',
+  CEK_PENGUMUMAN: 'cek-pengumuman',
 };
 
 // HTTP Status Codes

@@ -14,7 +14,6 @@ export default defineConfig({
         headers: {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'https://mflss.sgp.dom.my.id'
         },
         logLevel: 'debug',
       },
@@ -25,7 +24,6 @@ export default defineConfig({
         headers: {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'https://mflss.sgp.dom.my.id'
         },
         logLevel: 'debug',
       }
