@@ -4,8 +4,7 @@ import { tokenStorage, clearAllStorage } from '../utils/storage';
 
 // Create axios instance
 const apiClient = axios.create({
-  // Ensure baseURL ends with / for correct joining with relative paths
-  baseURL: API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
