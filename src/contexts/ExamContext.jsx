@@ -39,11 +39,11 @@ export const ExamProvider = ({ children, examId }) => {
           question: q.pertanyaan,
           image: q.gambar,
           options: {
-            A: q.opsi_a,
-            B: q.opsi_b,
-            C: q.opsi_c,
-            D: q.opsi_d,
-            E: q.opsi_e || null,
+            A: { text: q.opsi_a, image: q.opsi_a_image },
+            B: { text: q.opsi_b, image: q.opsi_b_image },
+            C: { text: q.opsi_c, image: q.opsi_c_image },
+            D: { text: q.opsi_d, image: q.opsi_d_image },
+            E: { text: q.opsi_e, image: q.opsi_e_image },
           },
           bobot: q.bobot
         }));

@@ -2,68 +2,38 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LogIn } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const navigate = useNavigate();
+  const { login } = useAuth(); // Get login function from context
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    console.log('=== LOGIN FORM SUBMITTED ===');
-    console.log('Email:', email);
-    
+
     setError('');
     setIsLoading(true);
 
     try {
-      // DEMO MODE: Aktif untuk test UI tanpa backend
-      // Comment bagian ini jika backend sudah ready
-      if (email && password) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        sessionStorage.setItem('cbt_auth_token', 'demo-token-12345');
-        sessionStorage.setItem('cbt_user_data', JSON.stringify({
-          nama: 'Demo User',
-          email: email,
-          role: 'pendaftar'
-        }));
-        setIsLoading(false);
-        navigate('/select-exam');
-        return;
-      }
-      
-      /* REAL API MODE: Uncomment jika backend sudah ready
-      console.log('Calling API login...');
-      
-      // Import authApi
-      const { authApi } = await import('../api/authApi');
-      
-      // Call real API
-      const result = await authApi.login(email, password, 'web_browser');
-      
-      console.log('API Response:', result);
-      
+      // Call login from AuthContext (which calls real API)
+      const result = await login(email, password);
+
       if (result.success) {
-        console.log('Login successful!');
-        console.log('User:', result.data.user);
-        
         setIsLoading(false);
         navigate('/select-exam');
       } else {
-        console.error('Login failed:', result.error);
-        setError(result.error || 'Login gagal. Silakan coba lagi.');
+        // Show specific error from API
+        setError(result.error || 'Login gagal. Periksa kembali email dan password Anda.');
         setIsLoading(false);
       }
-      */
-      
     } catch (err) {
       console.error('Login error:', err);
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+      setError('Terjadi kesalahan sistem. Silakan coba lagi.');
       setIsLoading(false);
     }
   };

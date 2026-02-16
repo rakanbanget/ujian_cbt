@@ -49,18 +49,20 @@ export default function QuestionDisplay({
       </div>
 
       {/* Options */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {options.map((option) => {
-          const optionText = question.options?.[option];
-          if (!optionText) return null; // Skip if no option text
+          const optionData = question.options?.[option];
+          if (!optionData || (!optionData.text && !optionData.image)) return null;
 
           const isSelected = selectedAnswer === option;
+          const { text, image } = optionData;
+
           return (
             <label
               key={option}
-              className={`flex items-start p-5 border-2 rounded-lg cursor-pointer transition-all ${isSelected
-                  ? 'border-blue-600 bg-blue-50 shadow-md'
-                  : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+              className={`flex items-start p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${isSelected
+                ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+                : 'border-gray-200 hover:border-primary/40 hover:bg-gray-50'
                 }`}
             >
               <input
@@ -69,21 +71,37 @@ export default function QuestionDisplay({
                 value={option}
                 checked={isSelected}
                 onChange={() => onSelectAnswer(option)}
-                className="mt-1 mr-4 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                className="mt-1.5 mr-4 w-5 h-5 text-primary focus:ring-primary"
               />
-              <div className="flex-1">
-                <span
-                  className={`font-bold mr-3 ${isSelected ? 'text-blue-600' : 'text-gray-900'
-                    }`}
-                >
-                  {option}.
-                </span>
-                <span
-                  className={`${isSelected ? 'text-gray-900 font-medium' : 'text-gray-800'
-                    }`}
-                >
-                  {optionText}
-                </span>
+              <div className="flex flex-col gap-3 flex-1">
+                <div className="flex items-center gap-4">
+                  <span
+                    className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-bold transition-colors ${isSelected ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
+                      }`}
+                  >
+                    {option}
+                  </span>
+
+                  {text && (
+                    <span
+                      className={`text-lg transition-colors ${isSelected ? 'text-primary-900 font-semibold' : 'text-gray-800'
+                        }`}
+                    >
+                      {text}
+                    </span>
+                  )}
+                </div>
+
+                {image && (
+                  <div className="ml-12 mt-1">
+                    <img
+                      src={image}
+                      alt={`Opsi ${option}`}
+                      className="max-h-64 rounded-lg border border-gray-200 shadow-sm hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
               </div>
             </label>
           );

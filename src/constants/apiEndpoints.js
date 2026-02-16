@@ -1,5 +1,5 @@
-// API Base URL - sesuaikan dengan backend
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://api-mfls.test/api';
+// API Base URL - Menggunakan /api agar melewati Proxy Vite (Bypass CORS)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Auth Endpoints
 export const AUTH_ENDPOINTS = {

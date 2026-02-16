@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       // Check if token exists in sessionStorage
       const token = sessionStorage.getItem('cbt_auth_token');
       const userData = sessionStorage.getItem('cbt_user_data');
-      
+
       if (token && userData) {
         setIsAuthenticated(true);
         setUser(JSON.parse(userData));
@@ -23,58 +23,42 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
         setUser(null);
       }
-      
+
       setIsLoading(false);
     };
 
     checkAuth();
   }, []);
 
-  const login = async (nomorPeserta, password) => {
-    // TEMPORARY: Mock login untuk demo
-    // TODO: Uncomment untuk real API
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const mockUser = {
-      id: 1,
-      nomor_peserta: nomorPeserta,
-      nama: 'Demo User'
-    };
-    
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    
-    return { success: true, data: { user: mockUser } };
-    
-    /* REAL API (uncomment when backend ready):
-    const result = await authApi.login(nomorPeserta, password);
-    
-    if (result.success) {
-      setUser(result.data.user);
-      setIsAuthenticated(true);
+  const login = async (email, password) => {
+    try {
+      const result = await authApi.login(email, password);
+
+      if (result.success) {
+        setUser(result.data.user);
+        setIsAuthenticated(true);
+        // Token is already stored by authApi.login
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Login context error:", error);
+      return { success: false, error: error.message };
     }
-    
-    return result;
-    */
   };
 
   const logout = async () => {
-    // TEMPORARY: Mock logout untuk demo
-    // TODO: Uncomment untuk real API
-    
-    setUser(null);
-    setIsAuthenticated(false);
-    sessionStorage.removeItem('cbt_auth_token');
-    sessionStorage.removeItem('cbt_user_data');
-    
-    /* REAL API (uncomment when backend ready):
-    await authApi.logout();
-    setUser(null);
-    setIsAuthenticated(false);
-    clearAllStorage();
-    */
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      clearAllStorage();
+      sessionStorage.removeItem('cbt_auth_token');
+      sessionStorage.removeItem('cbt_user_data');
+    }
   };
 
   const value = {

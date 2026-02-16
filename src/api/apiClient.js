@@ -8,6 +8,8 @@ const apiClient = axios.create({
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Referer': 'https://mflss.sgp.dom.my.id'
   },
 });
 
