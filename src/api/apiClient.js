@@ -2,9 +2,12 @@ import axios from 'axios';
 import { API_BASE_URL, HTTP_STATUS } from '../constants/apiEndpoints';
 import { tokenStorage, clearAllStorage } from '../utils/storage';
 
+// Fallback ke URL production jika env var tidak terbaca
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://mflss.sgp.dom.my.id/api/';
+
 // Create axios instance
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: baseURL,
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
