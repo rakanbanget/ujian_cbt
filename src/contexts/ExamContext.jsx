@@ -74,12 +74,15 @@ export const ExamProvider = ({ children, examId }) => {
         const defaultDuration = 60;
         const examMeta = examTypes[examId] || { duration: defaultDuration, title: apiData.ujian };
 
+        const totalPoints = mappedQuestions.reduce((sum, q) => sum + (Number(q.bobot) || 0), 0);
+
         setExam({
           id: examId,
           title: apiData.ujian || examMeta.title,
           description: 'Ujian Online', // API doesn't provide description
           duration: examMeta.duration,
           total_questions: mappedQuestions.length,
+          total_points: totalPoints,
         });
 
         setQuestions(mappedQuestions);

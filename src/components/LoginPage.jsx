@@ -41,13 +41,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary-600 to-primary-800 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary/20 rounded-full mb-4">
-            <LogIn className="w-8 h-8 text-primary" />
+          <div className="flex justify-center mb-4">
+            <img src="/logo_mfls.jpeg" alt="MFLS Logo" className="w-24 h-24 object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-primary mb-2">Platform CBT</h1>
-          <p className="text-gray-600">Silakan login untuk memulai ujian</p>
+          <h1 className="text-3xl font-bold text-primary mb-2">Platform Pengerjaan MFLS</h1>
+          <p className="text-gray-600">Silakan login untuk memulai pengerjaan</p>
         </div>
 
         {/* Error Alert */}

@@ -6,11 +6,15 @@ export const examApi = {
   getUjians: async () => {
     try {
       const response = await apiClient.get(EXAM_ENDPOINTS.LIST_UJIANS);
-      return { success: true, data: response.data.data };
+      // Handle cases where data is in response.data.data (Laravel Resource) 
+      // or directly in response.data (Direct Array)
+      const examData = response.data.data || response.data;
+      return { success: true, data: Array.isArray(examData) ? examData : [] };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || error.message 
+      console.error('API Error in getUjians:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
       };
     }
   },
@@ -21,17 +25,17 @@ export const examApi = {
       const response = await apiClient.get(EXAM_ENDPOINTS.GET_SOAL, {
         params: { ujian_id: ujianId }
       });
-      return { 
-        success: true, 
+      return {
+        success: true,
         data: {
           ujian: response.data.ujian,
           questions: response.data.data
         }
       };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || error.message 
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
       };
     }
   },
@@ -43,9 +47,9 @@ export const examApi = {
         ujian_id: ujianId,
         answers: answers
       });
-      return { 
-        success: true, 
-        data: response.data.results 
+      return {
+        success: true,
+        data: response.data.results
       };
     } catch (error) {
       // Handle case where user already submitted
@@ -57,9 +61,9 @@ export const examApi = {
           score: error.response.data.score
         };
       }
-      return { 
-        success: false, 
-        error: error.response?.data?.message || error.message 
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
       };
     }
   },

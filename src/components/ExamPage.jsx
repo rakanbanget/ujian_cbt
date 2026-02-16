@@ -59,9 +59,9 @@ function ExamContent() {
       if (isAutoSubmit) {
         alert('Ujian telah disubmit otomatis karena pelanggaran keamanan. Hasil akan ditinjau oleh pengawas.');
       } else {
-        const score = result.data?.score;
-        const msg = score !== undefined
-          ? `Ujian berhasil disubmit! Skor Anda: ${score}`
+        const { earned_raw_score, max_raw_score } = result.data || {};
+        const msg = earned_raw_score !== undefined
+          ? `Ujian berhasil disubmit!\nSkor Akhir (Poin): ${earned_raw_score} / ${max_raw_score}`
           : 'Ujian berhasil disubmit! Terima kasih.';
         alert(msg);
       }
@@ -169,6 +169,10 @@ function ExamContent() {
                   <span className="font-semibold text-gray-600">
                     {questions.length - answeredCount}
                   </span>
+                </div>
+                <div className="flex justify-between text-sm border-t pt-2 mt-2">
+                  <span className="text-gray-600">Total Poin:</span>
+                  <span className="font-semibold text-primary">{exam?.total_points || 0}</span>
                 </div>
               </div>
             </div>
