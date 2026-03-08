@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LogIn } from 'lucide-react';
 
@@ -10,62 +11,68 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    console.log('=== LOGIN FORM SUBMITTED ===');
+    console.log('=== DEMO MODE LOGIN ===');
     console.log('Email:', email);
     
     setError('');
     setIsLoading(true);
 
+    // DEMO MODE: Auto login tanpa API
+    setTimeout(async () => {
+      const demoUser = {
+        nama: email.split('@')[0] || 'Demo User',
+        email: email || 'demo@example.com',
+        role: 'pendaftar'
+      };
+      
+      const demoToken = 'demo-token-12345';
+      
+      // Store in localStorage
+      localStorage.setItem('token', demoToken);
+      localStorage.setItem('user', JSON.stringify(demoUser));
+      
+      // Update AuthContext
+      await login(email, password);
+      
+      console.log('✅ Demo login successful!');
+      console.log('User:', demoUser);
+      
+      // Navigate to exam selection
+      navigate('/select-exam');
+      setIsLoading(false);
+    }, 500);
+
+    /* REAL API LOGIN (uncomment when backend ready):
     try {
-      // DEMO MODE: Aktif untuk test UI tanpa backend
-      // Comment bagian ini jika backend sudah ready
-      if (email && password) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        sessionStorage.setItem('cbt_auth_token', 'demo-token-12345');
-        sessionStorage.setItem('cbt_user_data', JSON.stringify({
-          nama: 'Demo User',
-          email: email,
-          role: 'pendaftar'
-        }));
-        setIsLoading(false);
-        navigate('/select-exam');
-        return;
-      }
-      
-      /* REAL API MODE: Uncomment jika backend sudah ready
-      console.log('Calling API login...');
-      
-      // Import authApi
-      const { authApi } = await import('../api/authApi');
-      
       // Call real API
       const result = await authApi.login(email, password, 'web_browser');
       
       console.log('API Response:', result);
       
       if (result.success) {
-        console.log('Login successful!');
+        console.log('✅ Login successful!');
         console.log('User:', result.data.user);
+        console.log('Token:', result.data.token);
         
-        setIsLoading(false);
+        // Navigate to exam selection
         navigate('/select-exam');
       } else {
-        console.error('Login failed:', result.error);
-        setError(result.error || 'Login gagal. Silakan coba lagi.');
-        setIsLoading(false);
+        console.error('❌ Login failed:', result.error);
+        setError(result.error || 'Login gagal. Periksa email dan password Anda.');
       }
-      */
       
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+      console.error('❌ Login error:', err);
+      setError('Terjadi kesalahan koneksi. Pastikan backend sudah running.');
+    } finally {
       setIsLoading(false);
     }
+    */
   };
 
   return (
@@ -108,7 +115,7 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Password
+              Password <span className="text-gray-400 text-sm font-normal">(opsional)</span>
             </label>
             <input
               type="password"
@@ -116,7 +123,6 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
               placeholder="Masukkan password"
-              required
               disabled={isLoading}
             />
           </div>
@@ -141,8 +147,12 @@ export default function LoginPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Pastikan koneksi internet Anda stabil</p>
+        <div className="mt-6 text-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+            <p className="text-sm text-blue-800 font-semibold">🎮 DEMO MODE</p>
+            <p className="text-xs text-blue-600">Masukkan email apa saja untuk login</p>
+          </div>
+          <p className="text-sm text-gray-600">Password tidak diperlukan dalam demo mode</p>
         </div>
       </div>
     </div>

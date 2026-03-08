@@ -12,9 +12,9 @@ export const AuthProvider = ({ children }) => {
   // Check authentication on mount
   useEffect(() => {
     const checkAuth = () => {
-      // Check if token exists in sessionStorage
-      const token = sessionStorage.getItem('cbt_auth_token');
-      const userData = sessionStorage.getItem('cbt_user_data');
+      // Check if token exists in localStorage
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
       
       if (token && userData) {
         setIsAuthenticated(true);
@@ -30,17 +30,12 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (nomorPeserta, password) => {
-    // TEMPORARY: Mock login untuk demo
-    // TODO: Uncomment untuk real API
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+  const login = async (email, password) => {
+    // DEMO MODE: Mock login
     const mockUser = {
-      id: 1,
-      nomor_peserta: nomorPeserta,
-      nama: 'Demo User'
+      nama: email.split('@')[0] || 'Demo User',
+      email: email,
+      role: 'pendaftar'
     };
     
     setUser(mockUser);
@@ -49,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     return { success: true, data: { user: mockUser } };
     
     /* REAL API (uncomment when backend ready):
-    const result = await authApi.login(nomorPeserta, password);
+    const result = await authApi.login(email, password, 'web_browser');
     
     if (result.success) {
       setUser(result.data.user);
@@ -61,13 +56,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    // TEMPORARY: Mock logout untuk demo
-    // TODO: Uncomment untuk real API
-    
+    // DEMO MODE: Clear localStorage
     setUser(null);
     setIsAuthenticated(false);
-    sessionStorage.removeItem('cbt_auth_token');
-    sessionStorage.removeItem('cbt_user_data');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     
     /* REAL API (uncomment when backend ready):
     await authApi.logout();

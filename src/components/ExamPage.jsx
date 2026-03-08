@@ -56,12 +56,16 @@ function ExamContent() {
     setIsSubmitting(false);
 
     if (result.success) {
-      if (isAutoSubmit) {
-        alert('Ujian telah disubmit otomatis karena pelanggaran keamanan. Hasil akan ditinjau oleh pengawas.');
-      } else {
-        alert('Ujian berhasil disubmit! Terima kasih.');
-      }
-      navigate('/login');
+      // Show results
+      const message = isAutoSubmit 
+        ? `Ujian telah disubmit otomatis karena pelanggaran keamanan.`
+        : `Ujian berhasil disubmit!`;
+      
+      alert(message);
+      navigate('/select-exam');
+    } else if (result.alreadySubmitted) {
+      alert(`Anda sudah mengerjakan ujian ini sebelumnya.`);
+      navigate('/select-exam');
     } else {
       alert('Gagal submit ujian: ' + result.error);
     }
@@ -180,7 +184,7 @@ function ExamContent() {
             <ul className="space-y-1 text-xs">
               <li>• Arrow keys: Navigasi</li>
               <li>• Ctrl+Enter: Submit</li>
-              <li>• Auto-save setiap 3 detik</li>
+              <li>• Auto-save ke browser</li>
             </ul>
           </div>
         </aside>
