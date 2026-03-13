@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { examApi } from '../api/examApi';
 import { examStateStorage } from '../utils/storage';
 
@@ -15,10 +15,6 @@ export const ExamProvider = ({ children, examId }) => {
   const [error, setError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Refs for auto-save
-  const saveTimeoutRef = useRef(null);
-  const pendingSavesRef = useRef(new Map());
-
   // Load exam data
   // Load exam data
   useEffect(() => {
@@ -26,67 +22,54 @@ export const ExamProvider = ({ children, examId }) => {
       setIsLoading(true);
       setError(null);
 
-      try {
-        // Load questions
-        const questionsResult = await examApi.getSoal(examId);
-        if (!questionsResult.success) throw new Error(questionsResult.error);
+      // TEMPORARY: Mock data untuk demo/testing UI
+      // TODO: Uncomment code di bawah untuk real API integration
 
-        // Map API format to frontend format
-        const apiData = questionsResult.data;
-        let mappedQuestions = apiData.questions.map((q) => ({
-          id: q.id,
-          // number will be assigned after shuffle
-          question: q.pertanyaan,
-          image: q.gambar,
-          options: {
-            A: { text: q.opsi_a, image: q.opsi_a_image },
-            B: { text: q.opsi_b, image: q.opsi_b_image },
-            C: { text: q.opsi_c, image: q.opsi_c_image },
-            D: { text: q.opsi_d, image: q.opsi_d_image },
-            E: { text: q.opsi_e, image: q.opsi_e_image },
-          },
-          bobot: q.bobot
-        }));
-
-        // Shuffle questions
-        for (let i = mappedQuestions.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [mappedQuestions[i], mappedQuestions[j]] = [mappedQuestions[j], mappedQuestions[i]];
-        }
-
-        // Re-index questions to be sequential (1, 2, 3...)
-        mappedQuestions = mappedQuestions.map((q, index) => ({
-          ...q,
-          number: index + 1
-        }));
-
-        // Set exam metadata (duration is not in API response for getSoal, assume default or derive from known types)
-        // Since API doesn't provide exam details like duration, we might need a lookup or update API.
-        // For strictly following API, we use what we have. 
-        // Ideally we would fetch exam details from a specific endpoint or look it up from a list we fetched earlier.
-        // Assuming we rely on frontend constants for metadata like duration for now as the API doc is sparse on that.
-        // Let's use a default duration or try to match with ID.
+      setTimeout(() => {
+        // Mock exam data based on examId
         const examTypes = {
-          '1': { duration: 90, title: 'Ujian Akademik' },
-          '2': { duration: 60, title: 'Ujian Psikotes' },
-          '3': { duration: 75, title: 'Ujian Lainnya' }
+          '1': {
+            id: 1,
+            title: 'TPA - Tes Potensi Akademik',
+            description: 'Tes kemampuan berpikir logis, analitis, dan pemecahan masalah',
+            duration: 90, // minutes
+            total_questions: 15,
+          },
+          '2': {
+            id: 2,
+            title: 'TBI - Tes Bahasa Inggris',
+            description: 'Tes kemampuan bahasa Inggris meliputi reading, listening, dan grammar',
+            duration: 60, // minutes
+            total_questions: 12,
+          },
+          '3': {
+            id: 3,
+            title: 'TPU - Tes Pengetahuan Umum',
+            description: 'Tes pengetahuan umum tentang berbagai bidang ilmu',
+            duration: 75, // minutes
+            total_questions: 20,
+          },
         };
-        const defaultDuration = 60;
-        const examMeta = examTypes[examId] || { duration: defaultDuration, title: apiData.ujian };
 
-        const totalPoints = mappedQuestions.reduce((sum, q) => sum + (Number(q.bobot) || 0), 0);
+        const mockExam = examTypes[examId] || examTypes['1'];
 
-        setExam({
-          id: examId,
-          title: apiData.ujian || examMeta.title,
-          description: 'Ujian Online', // API doesn't provide description
-          duration: examMeta.duration,
-          total_questions: mappedQuestions.length,
-          total_points: totalPoints,
-        });
+        // Mock questions
+        const mockQuestions = Array.from({ length: mockExam.total_questions }, (_, i) => ({
+          id: i + 1,
+          number: i + 1,
+          question: `Soal ${mockExam.title} nomor ${i + 1}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua?`,
+          options: {
+            A: `Opsi A untuk soal ${i + 1}`,
+            B: `Opsi B untuk soal ${i + 1}`,
+            C: `Opsi C untuk soal ${i + 1}`,
+            D: `Opsi D untuk soal ${i + 1}`,
+            E: `Opsi E untuk soal ${i + 1}`,
+          },
+        }));
 
-        setQuestions(mappedQuestions);
-        setTimeRemaining(examMeta.duration * 60);
+        setExam(mockExam);
+        setQuestions(mockQuestions);
+        setTimeRemaining(mockExam.duration * 60);
 
         // Try to restore previous state
         const savedState = examStateStorage.get(examId);
@@ -95,9 +78,35 @@ export const ExamProvider = ({ children, examId }) => {
           setDoubtfulQuestions(new Set(savedState.doubtfulQuestions || []));
           setCurrentQuestionIndex(savedState.currentQuestionIndex || 0);
         }
+
+        setIsLoading(false);
+      }, 1000);
+
+      /* REAL API INTEGRATION (uncomment when backend ready):
+      try {
+        // Load exam details
+        const examResult = await examApi.getExam(examId);
+        if (!examResult.success) throw new Error(examResult.error);
+
+        // Load questions
+        const questionsResult = await examApi.getQuestions(examId);
+        if (!questionsResult.success) throw new Error(questionsResult.error);
+
+        setExam(examResult.data);
+        setQuestions(questionsResult.data.questions || []);
+        setTimeRemaining(examResult.data.duration * 60); // Convert to seconds
+
+        // Try to restore previous state
+        const savedState = examStateStorage.get(examId);
+        if (savedState) {
+          setAnswers(savedState.answers || {});
+          setDoubtfulQuestions(new Set(savedState.doubtfulQuestions || []));
+          setCurrentQuestionIndex(savedState.currentQuestionIndex || 0);
+        }
+
+        setIsLoading(false);
       } catch (err) {
         setError(err.message);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -125,7 +134,7 @@ export const ExamProvider = ({ children, examId }) => {
     return () => clearInterval(timer);
   }, [timeRemaining]);
 
-  // Auto-save state to localStorage
+  // Auto-save state to localStorage only (backend doesn't support incremental saves)
   useEffect(() => {
     if (!examId || isLoading) return;
 
@@ -143,7 +152,7 @@ export const ExamProvider = ({ children, examId }) => {
   const saveAnswerToAPI = useCallback(async (questionId, answer, isDoubtful) => {
     // TEMPORARY: Mock auto-save untuk demo
     // TODO: Uncomment code di bawah untuk real API integration
-
+    
     // Add to pending saves
     pendingSavesRef.current.set(questionId, { answer, isDoubtful });
 
@@ -158,7 +167,7 @@ export const ExamProvider = ({ children, examId }) => {
 
       // Mock save (just clear pending)
       pendingSavesRef.current.clear();
-
+      
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -189,7 +198,7 @@ export const ExamProvider = ({ children, examId }) => {
       setIsSaving(false);
     }, 3000);
     */
-  }, [examId]);
+    }, [examId]);
 
   // Set answer
   const setAnswer = useCallback((questionId, answer) => {
@@ -197,10 +206,7 @@ export const ExamProvider = ({ children, examId }) => {
       ...prev,
       [questionId]: answer,
     }));
-
-    const isDoubtful = doubtfulQuestions.has(questionId);
-    saveAnswerToAPI(questionId, answer, isDoubtful);
-  }, [doubtfulQuestions, saveAnswerToAPI]);
+  }, []);
 
   // Toggle doubtful
   const toggleDoubtful = useCallback((questionId) => {
@@ -213,13 +219,7 @@ export const ExamProvider = ({ children, examId }) => {
       }
       return newSet;
     });
-
-    const answer = answers[questionId];
-    if (answer) {
-      const isDoubtful = !doubtfulQuestions.has(questionId);
-      saveAnswerToAPI(questionId, answer, isDoubtful);
-    }
-  }, [answers, doubtfulQuestions, saveAnswerToAPI]);
+  }, []);
 
   // Navigate questions
   const goToQuestion = useCallback((index) => {
@@ -241,37 +241,44 @@ export const ExamProvider = ({ children, examId }) => {
   const handleSubmitExam = useCallback(async () => {
     setIsSaving(true);
 
-    try {
-      // Transform answers to API format (lowercase options)
-      const apiAnswers = {};
-      Object.entries(answers).forEach(([qId, option]) => {
-        if (option) {
-          apiAnswers[qId] = option.toLowerCase();
-        }
-      });
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Submit to API
-      const result = await examApi.submitJawaban(examId, apiAnswers);
+    setIsSaving(false);
 
-      if (result.success) {
-        // Clear saved state
-        examStateStorage.remove(examId);
+    // Clear saved state
+    examStateStorage.remove(examId);
 
-        // You might want to return the score/result here or navigate
-        return { success: true, data: result.data };
-      } else if (result.alreadySubmitted) {
-        // Handle specifically if desired
-        examStateStorage.remove(examId);
-        return { success: false, error: result.error, alreadySubmitted: true, score: result.score };
-      }
+    return { success: true };
 
-      return { success: false, error: result.error };
-    } catch (err) {
-      return { success: false, error: err.message || 'Submission failed' };
-    } finally {
-      setIsSaving(false);
+    /* REAL API INTEGRATION (uncomment when backend ready):
+    // Force save any pending answers
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
-  }, [examId, answers]);
+
+    setIsSaving(true);
+
+    // Save all pending
+    const saves = Array.from(pendingSavesRef.current.entries());
+    for (const [qId, data] of saves) {
+      await examApi.submitAnswer(examId, qId, data.answer, data.isDoubtful);
+    }
+
+    // Submit exam
+    const result = await examApi.submitExam(examId);
+    
+    setIsSaving(false);
+
+    if (result.success) {
+      // Clear saved state
+      examStateStorage.remove(examId);
+      return { success: true };
+    }
+
+    return { success: false, error: result.error };
+    */
+  }, [examId]);
 
   // Get question status
   const getQuestionStatus = useCallback((questionId) => {

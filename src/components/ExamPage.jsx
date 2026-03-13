@@ -59,20 +59,11 @@ function ExamContent() {
       if (isAutoSubmit) {
         alert('Ujian telah disubmit otomatis karena pelanggaran keamanan. Hasil akan ditinjau oleh pengawas.');
       } else {
-        const { earned_raw_score, max_raw_score } = result.data || {};
-        const msg = earned_raw_score !== undefined
-          ? `Ujian berhasil disubmit!\nSkor Akhir (Poin): ${earned_raw_score} / ${max_raw_score}`
-          : 'Ujian berhasil disubmit! Terima kasih.';
-        alert(msg);
+        alert('Ujian berhasil disubmit! Terima kasih.');
       }
       navigate('/login');
     } else {
-      if (result.score !== undefined) {
-        alert(`Gagal submit: ${result.error}\nSkor Anda: ${result.score}`);
-        navigate('/login');
-      } else {
-        alert('Gagal submit ujian: ' + result.error);
-      }
+      alert('Gagal submit ujian: ' + result.error);
     }
   };
 
