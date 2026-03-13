@@ -3,39 +3,70 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LogIn } from 'lucide-react';
+import Swal from 'sweetalert2';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const handleCaptchaChange = (token) => {
+    setCaptchaToken(token);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('=== LOGIN FORM SUBMITTED ===');
-    console.log('Email:', email);
+    // Validate Captcha
+    if (!captchaToken) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Captcha Required',
+        text: 'Silakan centang reCAPTCHA untuk melanjutkan.',
+        confirmButtonColor: '#10b981',
+      });
+      return;
+    }
 
-    setError('');
     setIsLoading(true);
 
     try {
-      // Use the login function from AuthContext
       const result = await login(email, password);
 
       if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Berhasil',
+          text: 'Selamat datang kembali!',
+          timer: 1500,
+          showConfirmButton: false,
+          position: 'top-end',
+          toast: true
+        });
         setIsLoading(false);
         navigate('/select-exam');
       } else {
-        setError(result.error || 'Login gagal. Silakan coba lagi.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Gagal',
+          text: result.error || 'Email atau password mungkin salah.',
+          confirmButtonColor: '#10b981',
+        });
         setIsLoading(false);
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Kesalahan Sistem',
+        text: 'Terjadi kesalahan. Silakan coba lagi.',
+        confirmButtonColor: '#10b981',
+      });
       setIsLoading(false);
     }
   };
@@ -50,14 +81,6 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-primary mb-2">Platform Pengerjaan MFLS</h1>
           <p className="text-gray-600">Silakan login untuk memulai pengerjaan</p>
         </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded mb-6">
-            <p className="font-semibold">Login Gagal</p>
-            <p className="text-sm">{error}</p>
-          </div>
-        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -79,7 +102,7 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Password <span className="text-gray-400 text-sm font-normal"></span>
+              Password
             </label>
             <input
               type="password"
@@ -88,6 +111,13 @@ export default function LoginPage() {
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
               placeholder="Masukkan password"
               disabled={isLoading}
+            />
+          </div>
+
+          <div className="flex justify-center my-4 overflow-hidden rounded-lg">
+            <ReCAPTCHA
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+              onChange={handleCaptchaChange}
             />
           </div>
 

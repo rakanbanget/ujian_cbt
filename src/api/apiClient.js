@@ -2,8 +2,8 @@ import axios from 'axios';
 import { API_BASE_URL, HTTP_STATUS } from '../constants/apiEndpoints';
 import { tokenStorage, clearAllStorage } from '../utils/storage';
 
-// Fallback ke URL production jika env var tidak terbaca
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://mflss.sgp.dom.my.id/api/';
+// Gunakan URL dari env var
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 // Create axios instance
 const apiClient = axios.create({
