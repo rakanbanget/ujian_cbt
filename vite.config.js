@@ -8,7 +8,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'https://mflss.sgp.dom.my.id',
+        target: 'https://beasiswamncu.com',
         changeOrigin: true,
         secure: false,
         headers: {
@@ -18,7 +18,7 @@ export default defineConfig({
         logLevel: 'debug',
       },
       '/sanctum/csrf-cookie': {
-        target: 'https://mflss.sgp.dom.my.id',
+        target: 'https://beasiswamncu.com',
         changeOrigin: true,
         secure: false,
         headers: {

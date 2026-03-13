@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { examApi } from '../api/examApi';
 import { examStateStorage } from '../utils/storage';
 
@@ -15,272 +15,166 @@ export const ExamProvider = ({ children, examId }) => {
   const [error, setError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load exam data
-  // Load exam data
+  const pendingSavesRef = useRef(new Map());
+  const saveTimeoutRef = useRef(null);
+
   useEffect(() => {
     const loadExamData = async () => {
       setIsLoading(true);
       setError(null);
 
-      // TEMPORARY: Mock data untuk demo/testing UI
-      // TODO: Uncomment code di bawah untuk real API integration
-
-      setTimeout(() => {
-        // Mock exam data based on examId
-        const examTypes = {
-          '1': {
-            id: 1,
-            title: 'TPA - Tes Potensi Akademik',
-            description: 'Tes kemampuan berpikir logis, analitis, dan pemecahan masalah',
-            duration: 90, // minutes
-            total_questions: 15,
-          },
-          '2': {
-            id: 2,
-            title: 'TBI - Tes Bahasa Inggris',
-            description: 'Tes kemampuan bahasa Inggris meliputi reading, listening, dan grammar',
-            duration: 60, // minutes
-            total_questions: 12,
-          },
-          '3': {
-            id: 3,
-            title: 'TPU - Tes Pengetahuan Umum',
-            description: 'Tes pengetahuan umum tentang berbagai bidang ilmu',
-            duration: 75, // minutes
-            total_questions: 20,
-          },
-        };
-
-        const mockExam = examTypes[examId] || examTypes['1'];
-
-        // Mock questions
-        const mockQuestions = Array.from({ length: mockExam.total_questions }, (_, i) => ({
-          id: i + 1,
-          number: i + 1,
-          question: `Soal ${mockExam.title} nomor ${i + 1}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua?`,
-          options: {
-            A: `Opsi A untuk soal ${i + 1}`,
-            B: `Opsi B untuk soal ${i + 1}`,
-            C: `Opsi C untuk soal ${i + 1}`,
-            D: `Opsi D untuk soal ${i + 1}`,
-            E: `Opsi E untuk soal ${i + 1}`,
-          },
-        }));
-
-        setExam(mockExam);
-        setQuestions(mockQuestions);
-        setTimeRemaining(mockExam.duration * 60);
-
-        // Try to restore previous state
-        const savedState = examStateStorage.get(examId);
-        if (savedState) {
-          setAnswers(savedState.answers || {});
-          setDoubtfulQuestions(new Set(savedState.doubtfulQuestions || []));
-          setCurrentQuestionIndex(savedState.currentQuestionIndex || 0);
-        }
-
-        setIsLoading(false);
-      }, 1000);
-
-      /* REAL API INTEGRATION (uncomment when backend ready):
       try {
-        // Load exam details
-        const examResult = await examApi.getExam(examId);
-        if (!examResult.success) throw new Error(examResult.error);
+        const result = await examApi.getSoal(examId);
 
-        // Load questions
-        const questionsResult = await examApi.getQuestions(examId);
-        if (!questionsResult.success) throw new Error(questionsResult.error);
+        if (result.success) {
+          const { ujian, questions: apiQuestions } = result.data;
+          
+          // Map API questions to frontend format
+          const formattedQuestions = apiQuestions.map((q, index) => ({
+            id: q.id,
+            number: index + 1,
+            question: q.pertanyaan || q.soal || q.question || 'Pertanyaan tidak tersedia.',
+            image: q.gambar || q.image,
+            options: {
+              A: { 
+                text: q.pilihan_a || q.option_a || q.opsi_a,
+                image: q.pilihan_a_gambar || q.gambar_a || q.opsi_a_gambar || q.opsi_a_image || q.option_a_image || q.option_a_gambar
+              },
+              B: { 
+                text: q.pilihan_b || q.option_b || q.opsi_b,
+                image: q.pilihan_b_gambar || q.gambar_b || q.opsi_b_gambar || q.opsi_b_image || q.option_b_image || q.option_b_gambar
+              },
+              C: { 
+                text: q.pilihan_c || q.option_c || q.opsi_c,
+                image: q.pilihan_c_gambar || q.gambar_c || q.opsi_c_gambar || q.opsi_c_image || q.option_c_image || q.option_c_gambar
+              },
+              D: { 
+                text: q.pilihan_d || q.option_d || q.opsi_d,
+                image: q.pilihan_d_gambar || q.gambar_d || q.opsi_d_gambar || q.opsi_d_image || q.option_d_image || q.option_d_gambar
+              },
+              E: { 
+                text: q.pilihan_e || q.option_e || q.opsi_e,
+                image: q.pilihan_e_gambar || q.gambar_e || q.opsi_e_gambar || q.opsi_e_image || q.option_e_image || q.option_e_gambar
+              },
+            }
+          }));
 
-        setExam(examResult.data);
-        setQuestions(questionsResult.data.questions || []);
-        setTimeRemaining(examResult.data.duration * 60); // Convert to seconds
+          setExam(ujian);
+          setQuestions(formattedQuestions);
+          setTimeRemaining((ujian.duration || 60) * 60);
 
-        // Try to restore previous state
-        const savedState = examStateStorage.get(examId);
-        if (savedState) {
-          setAnswers(savedState.answers || {});
-          setDoubtfulQuestions(new Set(savedState.doubtfulQuestions || []));
-          setCurrentQuestionIndex(savedState.currentQuestionIndex || 0);
+          // Restore state
+          const savedState = examStateStorage.get(examId);
+          if (savedState) {
+            setAnswers(savedState.answers || {});
+            setDoubtfulQuestions(new Set(savedState.doubtfulQuestions || []));
+            setCurrentQuestionIndex(savedState.currentQuestionIndex || 0);
+          }
+        } else {
+          setError(result.error || 'Gagal memuat soal ujian.');
         }
-
-        setIsLoading(false);
       } catch (err) {
-        setError(err.message);
+        console.error('Error loading exam:', err);
+        setError('Terjadi kesalahan jaringan atau server.');
+      } finally {
         setIsLoading(false);
       }
     };
 
-    if (examId) {
-      loadExamData();
-    }
+    if (examId) loadExamData();
   }, [examId]);
 
-  // Timer countdown
   useEffect(() => {
     if (timeRemaining === null || timeRemaining <= 0) return;
-
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          handleSubmitExam(); // Auto-submit when time's up
+          handleSubmitExam();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [timeRemaining]);
 
-  // Auto-save state to localStorage only (backend doesn't support incremental saves)
   useEffect(() => {
     if (!examId || isLoading) return;
-
     const state = {
       answers,
       doubtfulQuestions: Array.from(doubtfulQuestions),
       currentQuestionIndex,
       lastSaved: new Date().toISOString(),
     };
-
     examStateStorage.set(examId, state);
   }, [examId, answers, doubtfulQuestions, currentQuestionIndex, isLoading]);
 
-  // Debounced auto-save to API
   const saveAnswerToAPI = useCallback(async (questionId, answer, isDoubtful) => {
-    // TEMPORARY: Mock auto-save untuk demo
-    // TODO: Uncomment code di bawah untuk real API integration
-    
-    // Add to pending saves
     pendingSavesRef.current.set(questionId, { answer, isDoubtful });
-
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       setIsSaving(true);
-
-      // Mock save (just clear pending)
       pendingSavesRef.current.clear();
-      
-      // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500));
-
       setIsSaving(false);
     }, 3000);
+  }, [examId]);
 
-    /* REAL API INTEGRATION (uncomment when backend ready):
-    // Add to pending saves
-    pendingSavesRef.current.set(questionId, { answer, isDoubtful });
-
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Set new timeout
-    saveTimeoutRef.current = setTimeout(async () => {
-      setIsSaving(true);
-
-      // Process all pending saves
-      const saves = Array.from(pendingSavesRef.current.entries());
-      pendingSavesRef.current.clear();
-
-      for (const [qId, data] of saves) {
-        await examApi.submitAnswer(examId, qId, data.answer, data.isDoubtful);
-      }
-
-      setIsSaving(false);
-    }, 3000);
-    */
-    }, [examId]);
-
-  // Set answer
   const setAnswer = useCallback((questionId, answer) => {
     setAnswers((prev) => ({
       ...prev,
       [questionId]: answer,
     }));
-  }, []);
+    saveAnswerToAPI(questionId, answer, doubtfulQuestions.has(questionId));
+  }, [saveAnswerToAPI, doubtfulQuestions]);
 
-  // Toggle doubtful
   const toggleDoubtful = useCallback((questionId) => {
     setDoubtfulQuestions((prev) => {
       const newSet = new Set(prev);
+      const isNowDoubtful = !newSet.has(questionId);
       if (newSet.has(questionId)) {
         newSet.delete(questionId);
       } else {
         newSet.add(questionId);
       }
+      saveAnswerToAPI(questionId, answers[questionId], isNowDoubtful);
       return newSet;
     });
-  }, []);
+  }, [saveAnswerToAPI, answers]);
 
-  // Navigate questions
   const goToQuestion = useCallback((index) => {
-    if (index >= 0 && index < questions.length) {
-      setCurrentQuestionIndex(index);
-    }
+    if (index >= 0 && index < questions.length) setCurrentQuestionIndex(index);
   }, [questions.length]);
 
-  const nextQuestion = useCallback(() => {
-    goToQuestion(currentQuestionIndex + 1);
-  }, [currentQuestionIndex, goToQuestion]);
+  const nextQuestion = useCallback(() => goToQuestion(currentQuestionIndex + 1), [currentQuestionIndex, goToQuestion]);
+  const previousQuestion = useCallback(() => goToQuestion(currentQuestionIndex - 1), [currentQuestionIndex, goToQuestion]);
 
-  const previousQuestion = useCallback(() => {
-    goToQuestion(currentQuestionIndex - 1);
-  }, [currentQuestionIndex, goToQuestion]);
-
-
-  // Submit exam
   const handleSubmitExam = useCallback(async () => {
     setIsSaving(true);
+    setError(null);
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    setIsSaving(false);
-
-    // Clear saved state
-    examStateStorage.remove(examId);
-
-    return { success: true };
-
-    /* REAL API INTEGRATION (uncomment when backend ready):
-    // Force save any pending answers
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    try {
+      const result = await examApi.submitJawaban(examId, answers);
+      
+      setIsSaving(false);
+      
+      if (result.success) {
+        // Clear saved state only on success
+        examStateStorage.remove(examId);
+        return { success: true, data: result.data };
+      } else {
+        setError(result.error || 'Gagal mengirim jawaban.');
+        return { success: false, error: result.error };
+      }
+    } catch (err) {
+      console.error('Submission error:', err);
+      setIsSaving(false);
+      setError('Terjadi kesalahan saat mengirim jawaban.');
+      return { success: false, error: 'Terjadi kesalahan jaringan.' };
     }
+  }, [examId, answers]);
 
-    setIsSaving(true);
-
-    // Save all pending
-    const saves = Array.from(pendingSavesRef.current.entries());
-    for (const [qId, data] of saves) {
-      await examApi.submitAnswer(examId, qId, data.answer, data.isDoubtful);
-    }
-
-    // Submit exam
-    const result = await examApi.submitExam(examId);
-    
-    setIsSaving(false);
-
-    if (result.success) {
-      // Clear saved state
-      examStateStorage.remove(examId);
-      return { success: true };
-    }
-
-    return { success: false, error: result.error };
-    */
-  }, [examId]);
-
-  // Get question status
   const getQuestionStatus = useCallback((questionId) => {
     if (doubtfulQuestions.has(questionId)) return 'doubtful';
     if (answers[questionId]) return 'answered';
@@ -288,23 +182,11 @@ export const ExamProvider = ({ children, examId }) => {
   }, [answers, doubtfulQuestions]);
 
   const value = {
-    exam,
-    questions,
-    answers,
-    doubtfulQuestions,
-    currentQuestionIndex,
+    exam, questions, answers, doubtfulQuestions, currentQuestionIndex,
     currentQuestion: questions[currentQuestionIndex],
-    timeRemaining,
-    isLoading,
-    error,
-    isSaving,
-    setAnswer,
-    toggleDoubtful,
-    goToQuestion,
-    nextQuestion,
-    previousQuestion,
-    handleSubmitExam,
-    getQuestionStatus,
+    timeRemaining, isLoading, error, isSaving,
+    setAnswer, toggleDoubtful, goToQuestion, nextQuestion, previousQuestion,
+    handleSubmitExam, getQuestionStatus,
     answeredCount: Object.keys(answers).length,
     doubtfulCount: doubtfulQuestions.size,
   };
@@ -314,8 +196,6 @@ export const ExamProvider = ({ children, examId }) => {
 
 export const useExam = () => {
   const context = useContext(ExamContext);
-  if (!context) {
-    throw new Error('useExam must be used within ExamProvider');
-  }
+  if (!context) throw new Error('useExam must be used within ExamProvider');
   return context;
 };

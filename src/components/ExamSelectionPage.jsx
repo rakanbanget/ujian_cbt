@@ -1,41 +1,53 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, Brain, Globe, LogOut } from 'lucide-react';
+import { BookOpen, Brain, Globe, LogOut, AlertCircle } from 'lucide-react';
+import { LoadingSpinner } from './LoadingSpinner';
+import { examApi } from '../api/examApi';
+import Swal from 'sweetalert2';
 
 export default function ExamSelectionPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [ujians, setUjians] = useState([]);
 
-  const examTypes = [
-    {
-      id: 'tpa',
-      title: 'TPA',
-      subtitle: 'Tes Potensi Akademik',
-      description: 'Tes kemampuan berpikir logis, analitis, dan pemecahan masalah',
-      icon: Brain,
-      color: 'from-primary to-primary-700',
-      examId: 1,
-    },
-    {
-      id: 'tbi',
-      title: 'TBI',
-      subtitle: 'Tes Bahasa Inggris',
-      description: 'Tes kemampuan bahasa Inggris meliputi reading, listening, dan grammar',
-      icon: Globe,
-      color: 'from-secondary to-secondary-600',
-      examId: 2,
-    },
-    {
-      id: 'tpu',
-      title: 'TPU',
-      subtitle: 'Tes Pengetahuan Umum',
-      description: 'Tes pengetahuan umum tentang berbagai bidang ilmu',
-      icon: BookOpen,
-      color: 'from-primary-600 to-primary-800',
-      examId: 3,
-    },
-  ];
+  useEffect(() => {
+    const fetchUjians = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await examApi.getUjians();
+        if (result.success) {
+          setUjians(result.data);
+        } else {
+          setError(result.error);
+        }
+      } catch (err) {
+        setError('Gagal mengambil daftar ujian. Silakan coba lagi.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUjians();
+  }, []);
+
+  // Map API data to display-friendly format
+  const getDisplayData = (exam) => {
+    // Determine icon and color based on title or ID
+    const examTitle = exam.nama || exam.title || '';
+    const titleLower = examTitle.toLowerCase();
+    
+    if (titleLower.includes('tpa')) {
+      return { icon: Brain, color: 'from-primary to-primary-700' };
+    } else if (titleLower.includes('bahasa')) {
+      return { icon: Globe, color: 'from-secondary to-secondary-600' };
+    } else {
+      return { icon: BookOpen, color: 'from-primary-600 to-primary-800' };
+    }
+  };
 
   const handleSelectExam = (exam) => {
     // Pengecekan status pengerjaan
@@ -52,7 +64,7 @@ export default function ExamSelectionPage() {
     }
 
     // Cek apakah ujian memiliki soal
-    const questionCount = Number(exam.jumlah_soal || 0);
+    const questionCount = Number(exam.jumlah_soal || exam.questions_count || 0);
 
     if (questionCount === 0) {
       Swal.fire({
@@ -65,7 +77,7 @@ export default function ExamSelectionPage() {
     }
 
     // Jika aman, navigasi ke ujian
-    navigate(`/exam/${exam.examId}`);
+    navigate(`/exam/${exam.id}`);
   };
 
   const handleLogout = async () => {
@@ -96,10 +108,6 @@ export default function ExamSelectionPage() {
       <main className="max-w-7xl mx-auto px-6 py-12">
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-            Demo Mode Active
-          </div>
           <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
             Pilih Jenis Ujian
           </h2>
@@ -111,7 +119,7 @@ export default function ExamSelectionPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="flex justify-center items-center py-20">
-            <LoadingSpinner />
+            <LoadingSpinner text="Memuat daftar ujian..." />
           </div>
         )}
 
@@ -136,42 +144,60 @@ export default function ExamSelectionPage() {
 
         {/* Exam Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {examTypes.map((exam) => {
-            const Icon = exam.icon;
+          {ujians.map((exam) => {
+            const { icon: Icon, color } = getDisplayData(exam);
             return (
               <div
                 key={exam.id}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group cursor-pointer"
-                onClick={() => handleSelectExam(exam.examId)}
+                onClick={() => handleSelectExam(exam)}
               >
                 {/* Card Header with Gradient */}
-                <div className={`bg-gradient-to-br ${exam.color} p-8 text-white`}>
+                <div className={`bg-gradient-to-br ${color} p-8 text-white relative`}>
+                  {/* Status Badge */}
+                  <div className="absolute top-4 right-4">
+                    {exam.is_submitted === true || exam.is_submitted === 1 ? (
+                      <span className="bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">
+                        SUDAH DIKERJAKAN
+                      </span>
+                    ) : Number(exam.jumlah_soal || exam.questions_count || 0) === 0 ? (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">
+                        SOAL BELUM ADA
+                      </span>
+                    ) : (
+                      <span className="bg-white text-primary text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">
+                        SIAP DIKERJAKAN
+                      </span>
+                    )}
+                  </div>
+
                   <div className="flex justify-center mb-4">
                     <div className="bg-white bg-opacity-20 p-4 rounded-full">
                       <Icon className="w-12 h-12" />
                     </div>
                   </div>
                   <h3 className="text-3xl font-bold text-center mb-2">
-                    {exam.title}
+                    {exam.nama || exam.title || 'Sesi Ujian'}
                   </h3>
                   <p className="text-center text-white text-opacity-90 font-medium">
-                    {exam.subtitle}
+                    {exam.subtitle || exam.code || exam.kode_ujian || 'Platform CBT'}
                   </p>
                 </div>
 
                 {/* Card Body */}
                 <div className="p-6">
-                  <p className="text-gray-600 text-center mb-6">
-                    {exam.description}
+                  <p className="text-gray-600 text-center mb-6 line-clamp-2">
+                    {exam.description || exam.keterangan || `Sesi ujian ${exam.nama || exam.title} dengan durasi ${exam.waktu || exam.durasi || exam.duration || 60} menit.`}
                   </p>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSelectExam(exam.examId);
+                      handleSelectExam(exam);
                     }}
-                    className={`w-full bg-gradient-to-r ${exam.color} text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 group-hover:scale-105`}
+                    disabled={Number(exam.jumlah_soal || exam.questions_count) === 0}
+                    className={`w-full bg-gradient-to-r ${color} text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 group-hover:scale-105 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed disabled:scale-100`}
                   >
-                    Mulai Ujian
+                    {Number(exam.jumlah_soal || exam.questions_count) === 0 ? 'Materi Kosong' : 'Mulai Ujian'}
                   </button>
                 </div>
               </div>

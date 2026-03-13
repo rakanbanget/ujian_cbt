@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../api/authApi';
-import { clearAllStorage } from '../utils/storage';
+import { tokenStorage, userStorage } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -31,50 +31,33 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (nomorPeserta, password) => {
-    // TEMPORARY: Mock login untuk demo
-    // TODO: Uncomment untuk real API
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const mockUser = {
-      id: 1,
-      nomor_peserta: nomorPeserta,
-      nama: 'Demo User'
-    };
-
-    setUser(mockUser);
-    setIsAuthenticated(true);
-
-    return { success: true, data: { user: mockUser } };
-
-    /* REAL API (uncomment when backend ready):
-    const result = await authApi.login(nomorPeserta, password);
-    
-    if (result.success) {
-      setUser(result.data.user);
-      setIsAuthenticated(true);
+    // REAL API INTEGRATION
+    try {
+      const result = await authApi.login(nomorPeserta, password);
+      
+      if (result.success) {
+        setUser(result.data.user);
+        setIsAuthenticated(true);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Login error in context:', error);
+      return { success: false, error: 'Terjadi kesalahan saat login.' };
     }
-    
-    return result;
-    */
   };
 
   const logout = async () => {
-    // TEMPORARY: Mock logout untuk demo
-    // TODO: Uncomment untuk real API
-
-    setUser(null);
-    setIsAuthenticated(false);
-    sessionStorage.removeItem('cbt_auth_token');
-    sessionStorage.removeItem('cbt_user_data');
-
-    /* REAL API (uncomment when backend ready):
-    await authApi.logout();
-    setUser(null);
-    setIsAuthenticated(false);
-    clearAllStorage();
-    */
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      sessionStorage.removeItem('cbt_auth_token');
+      sessionStorage.removeItem('cbt_user_data');
+    }
   };
 
   const value = {

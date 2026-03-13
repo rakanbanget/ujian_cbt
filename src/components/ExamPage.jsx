@@ -10,7 +10,7 @@ import { ReviewPage } from './ReviewPage';
 import Timer from './Timer';
 import QuestionGrid from './QuestionGrid';
 import QuestionDisplay from './QuestionDisplay';
-import { LogOut, CheckCircle } from 'lucide-react';
+import { LogOut, CheckCircle, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function ExamContent() {
   const {
@@ -41,6 +41,7 @@ function ExamContent() {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Keyboard navigation
   useKeyboardNavigation({
@@ -107,90 +108,124 @@ function ExamContent() {
     <ExamSecurityWrapper onAutoSubmit={handleAutoSubmit}>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <header className="bg-white shadow-md px-6 py-4 sticky top-0 z-40">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">{exam?.title || 'Ujian'}</h1>
-              <p className="text-sm text-gray-600">
-                {user?.nama} • Soal {currentQuestionIndex + 1} dari {questions.length}
-              </p>
+        <header className="bg-white shadow-md px-4 md:px-6 py-3 md:py-4 sticky top-0 z-40">
+          <div className="flex justify-between items-center max-w-full overflow-hidden">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg text-gray-600"
+                aria-label="Toggle Sidebar"
+              >
+                {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+              <div>
+                <h1 className="text-sm md:text-xl font-bold text-gray-900 truncate max-w-[120px] md:max-w-none">
+                  {exam?.title || 'Ujian'}
+                </h1>
+                <p className="text-[10px] md:text-sm text-gray-600 truncate max-w-[120px] md:max-w-none">
+                  {user?.nama}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              {isSaving && (
-                <span className="text-sm text-blue-600 flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  Menyimpan...
-                </span>
-              )}
+            
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="hidden sm:block">
+                {isSaving && (
+                  <span className="text-xs text-blue-600 flex items-center gap-1">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                    Saving...
+                  </span>
+                )}
+              </div>
               <Timer timeRemaining={timeRemaining} />
               <button
                 onClick={() => setShowReview(true)}
-                className="bg-secondary text-primary px-6 py-2 rounded-lg hover:bg-secondary-600 transition flex items-center gap-2 font-bold"
+                className="bg-secondary text-primary px-3 md:px-6 py-2 rounded-lg hover:bg-secondary-600 transition flex items-center gap-1 md:gap-2 font-bold text-xs md:text-base"
               >
-                <CheckCircle className="w-5 h-5" />
-                Selesai Ujian
+                <CheckCircle className="w-4 h-4 md:w-5 h-5" />
+                <span className="hidden xs:inline">Selesai</span>
+                <span className="xs:hidden">Finish</span>
               </button>
               <button
                 onClick={() => setShowLogoutConfirm(true)}
-                className="text-gray-600 hover:text-red-600 transition"
+                className="p-1 md:p-2 text-gray-600 hover:text-red-600 transition"
                 title="Logout"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4 md:w-5 h-5" />
               </button>
             </div>
           </div>
         </header>
 
-        <div className="flex">
+        <div className="flex flex-col lg:flex-row relative">
+          {/* Overlay for mobile sidebar */}
+          {isSidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
           {/* Sidebar */}
-          <aside className="w-72 bg-white shadow-md p-6 min-h-[calc(100vh-73px)] sticky top-[73px]">
+          <aside className={`
+            fixed lg:sticky top-0 lg:top-[73px] left-0 h-full lg:h-[calc(100vh-73px)]
+            w-72 bg-white shadow-xl lg:shadow-md p-6 z-40 transition-transform duration-300 transform
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          `}>
+            <div className="flex justify-between items-center mb-6 lg:hidden">
+              <h3 className="font-bold text-gray-900">Navigasi</h3>
+              <button onClick={() => setIsSidebarOpen(false)} className="p-2">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
             <div className="mb-6">
-              <h3 className="font-bold text-gray-900 mb-3">Status Pengerjaan</h3>
+              <h3 className="font-bold text-gray-900 mb-3 text-sm md:text-base">Status Pengerjaan</h3>
               <div className="space-y-2">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Dijawab:</span>
                   <span className="font-semibold text-green-600">{answeredCount}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Ragu-ragu:</span>
                   <span className="font-semibold text-yellow-600">{doubtfulCount}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs md:text-sm">
                   <span className="text-gray-600">Belum dijawab:</span>
                   <span className="font-semibold text-gray-600">
                     {questions.length - answeredCount}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm border-t pt-2 mt-2">
-                  <span className="text-gray-600">Total Poin:</span>
-                  <span className="font-semibold text-primary">{exam?.total_points || 0}</span>
-                </div>
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <h3 className="font-bold text-gray-900 mb-3">Navigasi Soal</h3>
+            <div className="border-t pt-4 max-h-[50vh] lg:max-h-none overflow-y-auto">
+              <h3 className="font-bold text-gray-900 mb-3 text-sm md:text-base">Navigasi Soal</h3>
               <QuestionGrid
                 questions={questions}
                 currentIndex={currentQuestionIndex}
                 answers={answers}
                 doubtfulQuestions={doubtfulQuestions}
-                onSelectQuestion={goToQuestion}
+                onSelectQuestion={(idx) => {
+                  goToQuestion(idx);
+                  setIsSidebarOpen(false);
+                }}
               />
             </div>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-gray-700">
-              <p className="font-semibold mb-2">💡 Tips:</p>
-              <ul className="space-y-1 text-xs">
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg text-sm text-gray-700 hidden lg:block">
+              <p className="font-semibold mb-2 text-xs md:text-sm">💡 Tips:</p>
+              <ul className="space-y-1 text-[10px] md:text-xs">
                 <li>• Arrow keys: Navigasi</li>
                 <li>• Ctrl+Enter: Submit</li>
-                <li>• Auto-save setiap 3 detik</li>
+                <li>• Auto-save aktif</li>
               </ul>
             </div>
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-3 md:p-6 w-full max-w-full overflow-hidden">
+            <div className="lg:max-w-4xl mx-auto">
             <QuestionDisplay
               question={currentQuestion}
               selectedAnswer={answers[currentQuestion?.id]}
@@ -199,32 +234,35 @@ function ExamContent() {
             />
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
+            <div className="flex flex-col sm:flex-row gap-3 justify-between mt-8 mb-10">
               <button
                 onClick={previousQuestion}
                 disabled={currentQuestionIndex === 0}
-                className="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+                className="order-2 sm:order-1 px-4 md:px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold flex items-center justify-center gap-2 text-sm md:text-base"
               >
-                ← Sebelumnya
+                <ChevronLeft className="w-5 h-5" />
+                Sebelumnya
               </button>
 
               <button
                 onClick={() => toggleDoubtful(currentQuestion.id)}
-                className={`px-6 py-3 rounded-lg font-semibold transition ${doubtfulQuestions.has(currentQuestion?.id)
-                  ? 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                className={`order-1 sm:order-2 px-4 md:px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 text-sm md:text-base ${doubtfulQuestions.has(currentQuestion?.id)
+                  ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-500'
                   : 'bg-yellow-500 text-white hover:bg-yellow-600'
                   }`}
               >
-                {doubtfulQuestions.has(currentQuestion?.id) ? '✓ Ragu-ragu' : 'Ragu-ragu'}
+                {doubtfulQuestions.has(currentQuestion?.id) ? '✓ Dipilih Ragu' : 'Ragu-ragu'}
               </button>
 
               <button
                 onClick={nextQuestion}
                 disabled={currentQuestionIndex === questions.length - 1}
-                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+                className="order-3 px-4 md:px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold flex items-center justify-center gap-2 text-sm md:text-base"
               >
-                Selanjutnya →
+                Selanjutnya
+                <ChevronRight className="w-5 h-5" />
               </button>
+            </div>
             </div>
           </main>
         </div>
