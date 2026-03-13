@@ -25,7 +25,7 @@ export default function LoginPage() {
     try {
       // Use the login function from AuthContext
       const result = await login(email, password);
-      
+
       if (result.success) {
         setIsLoading(false);
         navigate('/select-exam');
@@ -79,7 +79,7 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Password <span className="text-gray-400 text-sm font-normal">(opsional)</span>
+              Password <span className="text-gray-400 text-sm font-normal"></span>
             </label>
             <input
               type="password"
