@@ -5,24 +5,24 @@ const STORAGE_KEYS = {
   EXAM_STATE: 'cbt_exam_state',
 };
 
-// Token Management
+// Token Management (localStorage agar tidak hilang saat refresh)
 export const tokenStorage = {
-  get: () => sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
-  set: (token) => sessionStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token),
-  remove: () => sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN),
+  get: () => localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
+  set: (token) => localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token),
+  remove: () => localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN),
 };
 
-// User Data Management
+// User Data Management (localStorage agar tidak hilang saat refresh)
 export const userStorage = {
   get: () => {
-    const data = sessionStorage.getItem(STORAGE_KEYS.USER_DATA);
+    const data = localStorage.getItem(STORAGE_KEYS.USER_DATA);
     return data ? JSON.parse(data) : null;
   },
-  set: (userData) => sessionStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData)),
-  remove: () => sessionStorage.removeItem(STORAGE_KEYS.USER_DATA),
+  set: (userData) => localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData)),
+  remove: () => localStorage.removeItem(STORAGE_KEYS.USER_DATA),
 };
 
-// Exam State Management (untuk auto-save recovery)
+// Exam State Management (untuk auto-save recovery + timer persistence)
 export const examStateStorage = {
   get: (examId) => {
     const data = localStorage.getItem(`${STORAGE_KEYS.EXAM_STATE}_${examId}`);
@@ -36,12 +36,36 @@ export const examStateStorage = {
   },
 };
 
+// Timer Persistence — disimpan terpisah supaya update tiap detik tidak
+// memicu re-render pada state yang lebih besar.
+const TIMER_KEY = 'cbt_timer';
+export const timerStorage = {
+  get: (examId) => {
+    const data = localStorage.getItem(`${TIMER_KEY}_${examId}`);
+    if (!data) return null;
+    const { remaining, savedAt } = JSON.parse(data);
+    // Koreksi waktu yang berlalu sejak terakhir disimpan
+    const elapsedSeconds = Math.floor((Date.now() - savedAt) / 1000);
+    const corrected = remaining - elapsedSeconds;
+    return corrected > 0 ? corrected : 0;
+  },
+  set: (examId, remaining) => {
+    localStorage.setItem(
+      `${TIMER_KEY}_${examId}`,
+      JSON.stringify({ remaining, savedAt: Date.now() })
+    );
+  },
+  remove: (examId) => {
+    localStorage.removeItem(`${TIMER_KEY}_${examId}`);
+  },
+};
+
 // Clear all storage
 export const clearAllStorage = () => {
   sessionStorage.clear();
-  // Keep localStorage for other purposes, only clear exam states
+  // Keep localStorage for other purposes, only clear exam states & timer
   Object.keys(localStorage).forEach(key => {
-    if (key.startsWith(STORAGE_KEYS.EXAM_STATE)) {
+    if (key.startsWith(STORAGE_KEYS.EXAM_STATE) || key.startsWith('cbt_timer')) {
       localStorage.removeItem(key);
     }
   });

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { examApi } from '../api/examApi';
-import { examStateStorage } from '../utils/storage';
+import { examStateStorage, timerStorage } from '../utils/storage';
 
 const ExamContext = createContext(null);
 
@@ -61,7 +61,16 @@ export const ExamProvider = ({ children, examId }) => {
 
           setExam(ujian);
           setQuestions(formattedQuestions);
-          setTimeRemaining((ujian.duration || 60) * 60);
+
+          // --- FIX TIMER: Pulihkan sisa waktu dari localStorage ---
+          const savedTime = timerStorage.get(examId);
+          if (savedTime !== null && savedTime > 0) {
+            // Lanjutkan dari waktu yang tersisa (sudah dikoreksi waktu berlalu)
+            setTimeRemaining(savedTime);
+          } else {
+            // Mulai dari awal hanya jika belum ada timer tersimpan
+            setTimeRemaining((ujian.duration || 60) * 60);
+          }
 
           // Restore state
           const savedState = examStateStorage.get(examId);
@@ -84,20 +93,27 @@ export const ExamProvider = ({ children, examId }) => {
     if (examId) loadExamData();
   }, [examId]);
 
+  // Tick timer dan simpan ke localStorage tiap 10 detik
   useEffect(() => {
     if (timeRemaining === null || timeRemaining <= 0) return;
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
+          timerStorage.remove(examId);
           handleSubmitExam();
           return 0;
         }
-        return prev - 1;
+        const next = prev - 1;
+        // Simpan ke localStorage tiap 10 detik agar tidak terlalu sering write
+        if (next % 10 === 0) {
+          timerStorage.set(examId, next);
+        }
+        return next;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeRemaining]);
+  }, [timeRemaining === null, examId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!examId || isLoading) return;
@@ -160,8 +176,9 @@ export const ExamProvider = ({ children, examId }) => {
       setIsSaving(false);
       
       if (result.success) {
-        // Clear saved state only on success
+        // Bersihkan semua state lokal termasuk timer
         examStateStorage.remove(examId);
+        timerStorage.remove(examId);
         return { success: true, data: result.data };
       } else {
         setError(result.error || 'Gagal mengirim jawaban.');
