@@ -90,9 +90,12 @@ export default function ExamSelectionPage() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">Platform CBT</h1>
-            <p className="text-sm text-gray-600">Selamat datang, {user?.nama}</p>
+          <div className="flex items-center gap-6">
+            <img src="/logoo.png" alt="Logo" className="w-20 h-20 object-contain" />
+            <div>
+              <h1 className="text-3xl font-bold text-primary leading-tight tracking-tight">Ujian MFLS</h1>
+              <p className="text-sm text-gray-600">Selamat datang, {user?.nama}</p>
+            </div>
           </div>
           <button
             onClick={handleLogout}

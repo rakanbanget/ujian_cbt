@@ -43,7 +43,7 @@ export const mockQuestions = [
 
 export const mockExam = {
   id: 1,
-  title: "Ujian Tengah Semester",
+  title: "Pemetaan Diri",
   description: "Ujian untuk mata pelajaran Matematika",
   duration: 60, // minutes
   total_questions: 40,

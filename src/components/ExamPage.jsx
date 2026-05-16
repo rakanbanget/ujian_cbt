@@ -118,13 +118,16 @@ function ExamContent() {
               >
                 {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
-              <div>
-                <h1 className="text-sm md:text-xl font-bold text-gray-900 truncate max-w-[120px] md:max-w-none">
-                  {exam?.title || 'Ujian'}
-                </h1>
-                <p className="text-[10px] md:text-sm text-gray-600 truncate max-w-[120px] md:max-w-none">
-                  {user?.nama}
-                </p>
+              <div className="flex items-center gap-4">
+                <img src="/logoo.png" alt="Logo" className="w-12 h-12 md:w-16 md:h-16 object-contain" />
+                <div>
+                  <h1 className="text-sm md:text-xl font-bold text-gray-900 truncate max-w-[120px] md:max-w-none">
+                    {exam?.title || 'Ujian'}
+                  </h1>
+                  <p className="text-[10px] md:text-sm text-gray-600 truncate max-w-[120px] md:max-w-none">
+                    {user?.nama}
+                  </p>
+                </div>
               </div>
             </div>
             
@@ -231,6 +234,7 @@ function ExamContent() {
               selectedAnswer={answers[currentQuestion?.id]}
               onSelectAnswer={(answer) => setAnswer(currentQuestion.id, answer)}
               isDoubtful={doubtfulQuestions.has(currentQuestion?.id)}
+              examTitle={exam?.title}
             />
 
             {/* Navigation Buttons */}

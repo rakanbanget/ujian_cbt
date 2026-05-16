@@ -1,10 +1,53 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, XCircle, MinusCircle, Info } from 'lucide-react';
+
+const SCALE_MAP = {
+  A: { text: 'Sangat Tidak Sesuai', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200', icon: XCircle },
+  B: { text: 'Tidak Sesuai', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', icon: MinusCircle },
+  C: { text: 'Netral', color: 'text-gray-600', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', icon: Info },
+  D: { text: 'Sesuai', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200', icon: CheckCircle2 },
+  E: { text: 'Sangat Sesuai', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', icon: CheckCircle2 },
+};
+
+function ScaleLegend() {
+  return (
+    <div className="mb-8 p-4 md:p-6 bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 shadow-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <Info className="w-5 h-5 text-primary" />
+        <h3 className="font-bold text-gray-900 text-sm md:text-base">Panduan Pilihan Jawaban</h3>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {Object.entries(SCALE_MAP).map(([key, value]) => {
+          const Icon = value.icon;
+          return (
+            <div
+              key={key}
+              className={`flex items-center gap-3 p-3 rounded-xl border ${value.borderColor} ${value.bgColor} transition-all hover:shadow-md`}
+            >
+              <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white rounded-lg font-bold text-primary shadow-sm">
+                {key}
+              </span>
+              <div className="flex flex-col">
+                <span className={`text-[10px] md:text-xs font-black uppercase tracking-tighter mb-0.5 ${value.color}`}>
+                  {value.text}
+                </span>
+                <span className="text-[10px] md:text-xs text-gray-500 font-medium leading-none">
+                  Pilihan {key}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function QuestionDisplay({
   question,
   selectedAnswer,
   onSelectAnswer,
   isDoubtful,
+  examTitle = '',
 }) {
   if (!question) {
     return (
@@ -16,8 +59,13 @@ export default function QuestionDisplay({
 
   const options = ['A', 'B', 'C', 'D', 'E'];
 
+  const isPemetaanDiri = examTitle?.toLowerCase().includes('pemetaan') || 
+                         examTitle?.toLowerCase().includes('diri') || 
+                         examTitle?.toLowerCase().includes('assessment');
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 md:p-8">
+      {isPemetaanDiri && <ScaleLegend />}
       {/* Question Header */}
       <div className="flex items-center justify-between mb-4 md:mb-6 pb-4 border-b">
         <h2 className="text-lg md:text-xl font-bold text-gray-900">
@@ -52,17 +100,20 @@ export default function QuestionDisplay({
       <div className="space-y-4">
         {options.map((option) => {
           let optionData = question.options?.[option];
-          if (!optionData) return null;
+
+          // Handle cases where optionData might be missing
+          if (!optionData && !isPemetaanDiri) return null;
 
           // Fallback for string format
           if (typeof optionData === 'string') {
             optionData = { text: optionData };
+          } else if (!optionData) {
+            optionData = { text: '', image: null };
           }
 
-          if (!optionData.text && !optionData.image) return null;
-
           const isSelected = selectedAnswer === option;
-          const { text, image } = optionData;
+          const text = optionData.text?.trim() || (isPemetaanDiri ? SCALE_MAP[option].text : '');
+          const image = optionData.image;
 
           return (
             <label
