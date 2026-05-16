@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LogIn } from 'lucide-react';
@@ -14,6 +14,10 @@ export default function LoginPage() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect ke halaman asal jika ada, atau ke /select-exam
+  const from = location.state?.from?.pathname || '/select-exam';
 
   const handleCaptchaChange = (token) => {
     setCaptchaToken(token);
@@ -49,7 +53,7 @@ export default function LoginPage() {
           toast: true
         });
         setIsLoading(false);
-        navigate('/select-exam');
+        navigate(from, { replace: true });
       } else {
         Swal.fire({
           icon: 'error',

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../api/authApi';
-import { tokenStorage, userStorage } from '../utils/storage';
+import { tokenStorage, userStorage, clearAllStorage } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -12,13 +12,13 @@ export const AuthProvider = ({ children }) => {
   // Check authentication on mount
   useEffect(() => {
     const checkAuth = () => {
-      // Check if token exists in sessionStorage
-      const token = sessionStorage.getItem('cbt_auth_token');
-      const userData = sessionStorage.getItem('cbt_user_data');
+      // Baca dari localStorage via helper (bukan hardcoded sessionStorage)
+      const token = tokenStorage.get();
+      const userData = userStorage.get();
 
       if (token && userData) {
         setIsAuthenticated(true);
-        setUser(JSON.parse(userData));
+        setUser(userData);
       } else {
         setIsAuthenticated(false);
         setUser(null);
@@ -55,8 +55,8 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
-      sessionStorage.removeItem('cbt_auth_token');
-      sessionStorage.removeItem('cbt_user_data');
+      // Bersihkan semua storage (token, user, exam state, timer)
+      clearAllStorage();
     }
   };
 

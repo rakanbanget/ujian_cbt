@@ -60,10 +60,13 @@ export const timerStorage = {
   },
 };
 
-// Clear all storage
+// Clear all storage (dipanggil saat logout)
 export const clearAllStorage = () => {
   sessionStorage.clear();
-  // Keep localStorage for other purposes, only clear exam states & timer
+  // Hapus token & user
+  localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+  // Hapus semua exam state & timer
   Object.keys(localStorage).forEach(key => {
     if (key.startsWith(STORAGE_KEYS.EXAM_STATE) || key.startsWith('cbt_timer')) {
       localStorage.removeItem(key);
