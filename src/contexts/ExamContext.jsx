@@ -32,7 +32,7 @@ export const ExamProvider = ({ children, examId }) => {
           // Map API questions to frontend format
           const formattedQuestions = apiQuestions.map((q, index) => ({
             id: q.id,
-            number: index + 1,
+            number: index + 1, // nomor asli (sementara, akan di-renumber setelah shuffle)
             question: q.pertanyaan || q.soal || q.question || 'Pertanyaan tidak tersedia.',
             image: q.gambar || q.image,
             options: {
@@ -60,7 +60,32 @@ export const ExamProvider = ({ children, examId }) => {
           }));
 
           setExam(ujian);
-          setQuestions(formattedQuestions);
+
+          // --- SHUFFLE SOAL per siswa ---
+          const savedState = examStateStorage.get(examId);
+
+          let shuffledQuestions;
+          if (savedState?.shuffleOrder && savedState.shuffleOrder.length === formattedQuestions.length) {
+            // Pulihkan urutan yang sudah tersimpan (agar tidak berubah saat refresh)
+            shuffledQuestions = savedState.shuffleOrder.map(id =>
+              formattedQuestions.find(q => q.id === id)
+            ).filter(Boolean);
+          } else {
+            // Acak pertama kali dengan Fisher-Yates shuffle
+            shuffledQuestions = [...formattedQuestions];
+            for (let i = shuffledQuestions.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
+            }
+          }
+
+          // Re-numbering soal sesuai urutan acak (nomor tampil = 1, 2, 3, ...)
+          shuffledQuestions = shuffledQuestions.map((q, index) => ({
+            ...q,
+            number: index + 1,
+          }));
+
+          setQuestions(shuffledQuestions);
 
           // --- FIX TIMER: Pulihkan sisa waktu dari localStorage ---
           const savedTime = timerStorage.get(examId);
@@ -72,8 +97,7 @@ export const ExamProvider = ({ children, examId }) => {
             setTimeRemaining((ujian.duration || 60) * 60);
           }
 
-          // Restore state
-          const savedState = examStateStorage.get(examId);
+          // Restore state jawaban & posisi
           if (savedState) {
             setAnswers(savedState.answers || {});
             setDoubtfulQuestions(new Set(savedState.doubtfulQuestions || []));
@@ -92,6 +116,7 @@ export const ExamProvider = ({ children, examId }) => {
 
     if (examId) loadExamData();
   }, [examId]);
+
 
   // Tick timer dan simpan ke localStorage tiap 10 detik
   useEffect(() => {
@@ -121,10 +146,12 @@ export const ExamProvider = ({ children, examId }) => {
       answers,
       doubtfulQuestions: Array.from(doubtfulQuestions),
       currentQuestionIndex,
+      // Simpan urutan ID soal yang sudah diacak agar tidak berubah saat refresh
+      shuffleOrder: questions.map(q => q.id),
       lastSaved: new Date().toISOString(),
     };
     examStateStorage.set(examId, state);
-  }, [examId, answers, doubtfulQuestions, currentQuestionIndex, isLoading]);
+  }, [examId, answers, doubtfulQuestions, currentQuestionIndex, questions, isLoading]);
 
   const saveAnswerToAPI = useCallback(async (questionId, answer, isDoubtful) => {
     pendingSavesRef.current.set(questionId, { answer, isDoubtful });
