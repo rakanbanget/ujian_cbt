@@ -104,7 +104,10 @@ export const ExamProvider = ({ children, examId }) => {
         }
       } catch (err) {
         console.error('Error loading exam:', err);
-        setError('Terjadi kesalahan jaringan atau server.');
+        // Tampilkan error detail agar mudah diagnosa
+        const errMsg = err?.message || err?.type || JSON.stringify(err);
+        const errStatus = err?.status ? ` (HTTP ${err.status})` : '';
+        setError(`Error${errStatus}: ${errMsg}`);
       } finally {
         setIsLoading(false);
       }
