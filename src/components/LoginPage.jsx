@@ -4,13 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LogIn } from 'lucide-react';
 import Swal from 'sweetalert2';
-import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -19,23 +17,8 @@ export default function LoginPage() {
   // Redirect ke halaman asal jika ada, atau ke /select-exam
   const from = location.state?.from?.pathname || '/select-exam';
 
-  const handleCaptchaChange = (token) => {
-    setCaptchaToken(token);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate Captcha
-    if (!captchaToken) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Captcha Required',
-        text: 'Silakan centang reCAPTCHA untuk melanjutkan.',
-        confirmButtonColor: '#10b981',
-      });
-      return;
-    }
 
     setIsLoading(true);
 
@@ -118,12 +101,6 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="flex justify-center my-4 overflow-hidden rounded-lg">
-            <ReCAPTCHA
-              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-              onChange={handleCaptchaChange}
-            />
-          </div>
 
           <button
             type="submit"

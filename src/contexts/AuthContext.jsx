@@ -11,28 +11,13 @@ export const AuthProvider = ({ children }) => {
 
   // Check authentication on mount
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = () => {
       const token = tokenStorage.get();
       const userData = userStorage.get();
 
       if (token && userData) {
-        // Validasi token ke server (pastikan masih valid)
-        try {
-          const result = await authApi.getUser();
-          if (result.success) {
-            setIsAuthenticated(true);
-            setUser(userData);
-          } else {
-            // Token ditolak server → paksa logout
-            clearAllStorage();
-            setIsAuthenticated(false);
-            setUser(null);
-          }
-        } catch {
-          clearAllStorage();
-          setIsAuthenticated(false);
-          setUser(null);
-        }
+        setIsAuthenticated(true);
+        setUser(userData);
       } else {
         setIsAuthenticated(false);
         setUser(null);
