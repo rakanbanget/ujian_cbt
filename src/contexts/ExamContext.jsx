@@ -60,32 +60,8 @@ export const ExamProvider = ({ children, examId }) => {
           }));
 
           setExam(ujian);
+          setQuestions(formattedQuestions);
 
-          // --- SHUFFLE SOAL per siswa ---
-          const savedState = examStateStorage.get(examId);
-
-          let shuffledQuestions;
-          if (savedState?.shuffleOrder && savedState.shuffleOrder.length === formattedQuestions.length) {
-            // Pulihkan urutan yang sudah tersimpan (agar tidak berubah saat refresh)
-            shuffledQuestions = savedState.shuffleOrder.map(id =>
-              formattedQuestions.find(q => q.id === id)
-            ).filter(Boolean);
-          } else {
-            // Acak pertama kali dengan Fisher-Yates shuffle
-            shuffledQuestions = [...formattedQuestions];
-            for (let i = shuffledQuestions.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
-            }
-          }
-
-          // Re-numbering soal sesuai urutan acak (nomor tampil = 1, 2, 3, ...)
-          shuffledQuestions = shuffledQuestions.map((q, index) => ({
-            ...q,
-            number: index + 1,
-          }));
-
-          setQuestions(shuffledQuestions);
 
           // --- FIX TIMER: Pulihkan sisa waktu dari localStorage ---
           const savedTime = timerStorage.get(examId);
@@ -166,12 +142,11 @@ export const ExamProvider = ({ children, examId }) => {
       answers,
       doubtfulQuestions: Array.from(doubtfulQuestions),
       currentQuestionIndex,
-      // Simpan urutan ID soal yang sudah diacak agar tidak berubah saat refresh
-      shuffleOrder: questions.map(q => q.id),
       lastSaved: new Date().toISOString(),
     };
     examStateStorage.set(examId, state);
-  }, [examId, answers, doubtfulQuestions, currentQuestionIndex, questions, isLoading]);
+  }, [examId, answers, doubtfulQuestions, currentQuestionIndex, isLoading]);
+
 
   const saveAnswerToAPI = useCallback(async (questionId, answer, isDoubtful) => {
     pendingSavesRef.current.set(questionId, { answer, isDoubtful });
