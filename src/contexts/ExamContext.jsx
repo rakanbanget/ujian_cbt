@@ -64,9 +64,11 @@ export const ExamProvider = ({ children, examId }) => {
 
 
           // --- FIX TIMER: Pulihkan sisa waktu dari localStorage ---
+          const savedState = examStateStorage.get(examId);
           const savedTime = timerStorage.get(examId);
           const dispensasiDetik = (ujian.dispensasi_menit || 0) * 60;
           const appliedDispensasi = savedState?.appliedDispensasi || 0;
+
           
           let finalTime = 0;
 
