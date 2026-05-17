@@ -89,12 +89,32 @@ export const ExamProvider = ({ children, examId }) => {
 
           // --- FIX TIMER: Pulihkan sisa waktu dari localStorage ---
           const savedTime = timerStorage.get(examId);
+          const dispensasiDetik = (ujian.dispensasi_menit || 0) * 60;
+          const appliedDispensasi = savedState?.appliedDispensasi || 0;
+          
+          let finalTime = 0;
+
           if (savedTime !== null && savedTime > 0) {
             // Lanjutkan dari waktu yang tersisa (sudah dikoreksi waktu berlalu)
-            setTimeRemaining(savedTime);
+            finalTime = savedTime;
+            
+            // Cek apakah ada dispensasi tambahan dari Admin yang belum masuk ke waktu lokal
+            if (dispensasiDetik > appliedDispensasi) {
+              finalTime += (dispensasiDetik - appliedDispensasi);
+            }
           } else {
             // Mulai dari awal hanya jika belum ada timer tersimpan
-            setTimeRemaining((ujian.duration || 60) * 60);
+            finalTime = ((ujian.duration || 60) * 60) + dispensasiDetik;
+          }
+          
+          setTimeRemaining(finalTime);
+
+          // Update data dispensasi yang sudah teraplikasikan ke storage
+          if (dispensasiDetik > appliedDispensasi || (savedState && savedState.appliedDispensasi === undefined)) {
+            examStateStorage.set(examId, {
+              ...(savedState || {}),
+              appliedDispensasi: dispensasiDetik
+            });
           }
 
           // Restore state jawaban & posisi

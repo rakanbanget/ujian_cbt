@@ -93,6 +93,9 @@ export const ExamSecurityWrapper = ({ children, enableSecurity = true, onAutoSub
   // Request fullscreen on mount
   useEffect(() => {
     if (!enableSecurity) return;
+    
+    // Abaikan fitur fullscreen wajib di perangkat mobile karena dukungan browser tidak konsisten
+    if (window.innerWidth <= 768) return;
 
     const requestFullscreen = async () => {
       try {

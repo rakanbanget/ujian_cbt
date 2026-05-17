@@ -42,6 +42,35 @@ function ScaleLegend() {
   );
 }
 
+// Helper untuk memperbaiki URL gambar agar bisa diakses dari HP
+const getImageUrl = (url) => {
+  if (!url) return url;
+  
+  const target = import.meta.env.VITE_API_PROXY_TARGET || 'https://beasiswamncu.com';
+  
+  // Jika URL menggunakan localhost atau 127.0.0.1, ganti dengan target (untuk akses HP)
+  if (url.includes('localhost') || url.includes('127.0.0.1')) {
+    try {
+      const urlObj = new URL(url);
+      return `${target}${urlObj.pathname}${urlObj.search}`;
+    } catch (e) {
+      return url;
+    }
+  }
+  
+  // Fix mixed content (http ke https)
+  if (url.startsWith('http://') && url.includes('beasiswamncu.com')) {
+    return url.replace('http://', 'https://');
+  }
+
+  // Jika URL relative, tambahkan target
+  if (url.startsWith('/storage/')) {
+     return `${target}${url}`;
+  }
+  
+  return url;
+};
+
 export default function QuestionDisplay({
   question,
   selectedAnswer,
@@ -87,7 +116,7 @@ export default function QuestionDisplay({
         {question.image && (
           <div className="mt-6">
             <img
-              src={question.image}
+              src={getImageUrl(question.image)}
               alt={`Soal ${question.number}`}
               className="max-w-full rounded-lg shadow-md"
               loading="lazy"
@@ -153,7 +182,7 @@ export default function QuestionDisplay({
                 {image && (
                   <div className="ml-0 md:ml-12 mt-1">
                     <img
-                      src={image}
+                      src={getImageUrl(image)}
                       alt={`Opsi ${option}`}
                       className="max-h-48 md:max-h-64 rounded-lg border border-gray-200 shadow-sm hover:scale-105 transition-transform w-auto h-auto"
                       loading="lazy"

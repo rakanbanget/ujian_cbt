@@ -61,13 +61,6 @@ export const useExamSecurity = ({ onViolation, enabled = true }) => {
         addViolation('Print disabled');
         return false;
       }
-
-      // Disable Ctrl+C (Copy) - optional, bisa di-enable jika perlu
-      // if (e.ctrlKey && e.key === 'c') {
-      //   e.preventDefault();
-      //   addViolation('Copy disabled');
-      //   return false;
-      // }
     };
 
     // 3. Detect tab visibility change (user switch tab)
@@ -84,6 +77,10 @@ export const useExamSecurity = ({ onViolation, enabled = true }) => {
 
     // 4. Detect window blur (user clicked outside browser)
     const handleBlur = () => {
+      // Pada perangkat mobile (HP), window blur sering ter-trigger tanpa disengaja
+      // (misal saat tap layar, scroll bar muncul/hilang). Kita abaikan di mobile.
+      if (window.innerWidth <= 768) return;
+
       addViolation('Window lost focus');
       onViolation?.({
         type: 'WINDOW_BLUR',
